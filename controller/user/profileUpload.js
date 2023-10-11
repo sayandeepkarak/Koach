@@ -5,26 +5,17 @@ import UserModel from "../../schema/userModel";
 import { createWriteStream } from "fs";
 
 async function profileUpload(req, res, next) {
-  const bodySchema = Joi.object({
-    email: Joi.string().email().required(),
-  });
-  const { error } = bodySchema.validate(req.body);
-  if (error) {
-    return next(CustomError.invalidData(error.message));
-  }
-  if (!req.files || !req.files.profile) {
-    return next(CustomError.invalidData("No image provided"));
-  }
   try {
-    const data = await UserModel.find({
-      "email.emailValue": req.body.email,
-    });
-    if (!data.length) {
+    const data = await UserModel.findById(req.userId);
+    if (!data) {
       return next(CustomError.notFoundError("No user exist"));
     }
-    const { data: buffer, mimetype, encoding } = req.files.profile;
+    if (!req.files || !req.files.profile) {
+      return next(CustomError.invalidData("No image provided"));
+    }
+    const { data: buffer, mimetype } = req.files.profile;
     const ext = mimetype.split("/")[1];
-    const imgName = data[0]._id + "." + ext;
+    const imgName = data._id + "." + ext;
     const uploadPath = path.join("./upload/", imgName);
     const imageCreator = createWriteStream(uploadPath);
     let isResSent = false;
@@ -40,7 +31,7 @@ async function profileUpload(req, res, next) {
     });
     imageCreator.on("close", async () => {
       if (!isResSent) {
-        await UserModel.findByIdAndUpdate(data[0]._id, {
+        await UserModel.findByIdAndUpdate(data._id, {
           $set: { imageUrl: imgName },
         });
         res.status(200).json({

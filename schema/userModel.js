@@ -1,10 +1,15 @@
 import { Schema, model } from "mongoose";
-import { hash, hashSync } from "bcrypt";
-import CustomError from "../service/CustomError";
+import { hash } from "bcrypt";
+import { boolean, string } from "joi";
 
 const UserSchema = new Schema({
   fullName: {
     type: String,
+    required: true,
+  },
+  gender: {
+    type: String,
+    enum: ["male", "female", "other"],
     required: true,
   },
   email: {
@@ -22,8 +27,8 @@ const UserSchema = new Schema({
   mobile: {
     type: Number,
     match: /^[6-9]([0-9]){9}$/,
-    required: true,
     unique: true,
+    required: true,
   },
   password: {
     type: String,
@@ -62,13 +67,17 @@ const UserSchema = new Schema({
       required: true,
     },
   },
+  adminApproval: {
+    type: Boolean,
+    default: false,
+  },
   isBlock: {
     type: Boolean,
     default: false,
   },
   refreshtoken: {
     type: String,
-    default: null,
+    default: "",
   },
 });
 

@@ -9,7 +9,7 @@ import verifyEmailOtp from "../controller/user/otp/verifyOtp";
 const userRoute = Router();
 
 userRoute.post("/", registerUser);
-userRoute.patch("/", fileUpload(), profileUpload);
+userRoute.patch("/", fileUpload(), verifyAccessKey, profileUpload);
 
 userRoute.get("/otp", verifyAccessKey, sendOtpToEmail);
 userRoute.post("/otp", verifyAccessKey, verifyEmailOtp);

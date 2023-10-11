@@ -3,12 +3,14 @@ import CustomError from "../../service/CustomError";
 import Jwt from "../../service/Jwt";
 import UserModel from "../../schema/userModel";
 import { sendMail } from "../../service/Mailer";
+import { SECRET_ACCESS_KEY } from "../../config";
 
 async function registerUser(req, res, next) {
   const schema = Joi.object({
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
     email: Joi.string().email().required(),
+    gender: Joi.string().valid("male", "female", "other").required(),
     mobile: Joi.string()
       .regex(/^[6-9]([0-9]){9}$/)
       .required(),
@@ -33,6 +35,7 @@ async function registerUser(req, res, next) {
   const {
     firstName,
     lastName,
+    gender,
     email: emailValue,
     mobile,
     password,
@@ -48,27 +51,31 @@ async function registerUser(req, res, next) {
     if (findData.length) {
       return next(CustomError.conflictData("User already exist"));
     }
-
     const user = new UserModel({
       fullName: firstName + " " + lastName,
       email: { emailValue },
+      gender,
       mobile,
       password,
       userType,
       address: { street, city, state, zip },
     });
     const userData = await user.save();
-    const ref_token = Jwt.encrypt({ userId: userData._id }, "15d");
-    userData.refreshtoken = ref_token;
-    await userData.save();
-    const message = `Congratulations, ${firstName} ${lastName}\nYou are successfully registered as a ${userType} in Koach Training Center.\nThank you for joining us.`;
+    const access_token = Jwt.encrypt(
+      { userId: userData._id },
+      "1m",
+      SECRET_ACCESS_KEY
+    );
+    const message = `Congratulations, ${firstName} ${lastName}\n\nYou are successfully registered as a ${userType} in Koach Training Center.\n\nYour account will be acivated soon by the Center admin. \n\nYou will be informed.\n\nThank you for joining us.`;
     await sendMail(emailValue, "Registration Successfull", message);
     res.status(200).json({
       data: {
-        refreshtoken: ref_token,
+        accesstoken: access_token,
         message: "Registration successfull",
       },
     });
+
+    console.log(user.email.emailValue + " Registered");
   } catch (error) {
     next(error);
   }

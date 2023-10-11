@@ -20,7 +20,7 @@ import authRoute from "./routes/auth";
   app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/user", userRoute);
-  app.use("/api/token", authRoute);
+  app.use("/api/auth", authRoute);
   app.use(
     "/koach-graph",
     /*verifyAccessKey,*/ expressMiddleware(graphqlServer)

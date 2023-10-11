@@ -5,7 +5,6 @@ import Jwt from "../service/Jwt";
 
 async function tokenVerify(req, res, next, isAccessKey = false) {
   const auth = req.headers.authorization;
-  console.log(auth);
   if (!auth) {
     return next(CustomError.invalidToken());
   }
